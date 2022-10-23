@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 
@@ -66,14 +65,6 @@ func main() {
 		}
 
 		r.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
-			b, err := json.Marshal(stub.Responses[0].Is.Body)
-			if err != nil {
-				fmt.Println(err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-			w.Write(b)
-
 			for k, v := range stub.Responses[0].Is.Headers {
 				w.Header().Add(k, v)
 			}
@@ -83,6 +74,13 @@ func main() {
 				code = http.StatusOK
 			}
 			w.WriteHeader(code)
+
+			b, err := json.Marshal(stub.Responses[0].Is.Body)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			w.Write(b)
 		})
 	}
 
