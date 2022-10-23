@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"os"
+	"os/signal"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/goccy/go-json"
@@ -44,8 +47,13 @@ type ImposterModel struct {
 	} `json:"imposters"`
 }
 
+const (
+	gracefulShutdownTime = 10 * time.Second
+)
+
 func main() {
-	ctx := context.Background()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
 	b, err := os.ReadFile("_testdata/imposter.json")
 	if err != nil {
 		panic(err)
@@ -84,5 +92,20 @@ func main() {
 		})
 	}
 
-	http.ListenAndServe(":3000", r)
+	svr := &http.Server{
+		Addr:    "localhost:3000",
+		Handler: r,
+	}
+	go func() {
+		if err := svr.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+			panic(err)
+		}
+	}()
+
+	<-ctx.Done()
+	tctx, cancel := context.WithTimeout(context.Background(), gracefulShutdownTime)
+	defer cancel()
+	if err := svr.Shutdown(tctx); err != nil {
+		panic(err)
+	}
 }
