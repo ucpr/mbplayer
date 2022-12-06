@@ -33,14 +33,15 @@ type ImposterModel struct {
 			} `json:"predicates"`
 			Responses []struct {
 				Behaviors []struct {
-					Wait int `json:"wait"`
+					Wait     int    `json:"wait"`
+					Decorate string `json:"decorate"`
 				} `json:"behaviors"`
 				Is struct {
 					Mode string `json:"_mode"`
 					// TODO: investigate whether it can be obtained by []byte
-					Body       map[string]interface{} `json:"body"`
-					Headers    map[string]string      `json:"headers"`
-					StatusCode int                    `json:"statusCode"`
+					Body       interface{}       `json:"body"`
+					Headers    map[string]string `json:"headers"`
+					StatusCode int               `json:"statusCode"`
 				} `json:"is"`
 			} `json:"responses"`
 		} `json:"stubs"`
